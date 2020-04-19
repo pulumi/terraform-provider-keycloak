@@ -71,6 +71,10 @@ func dataSourceKeycloakOpenidClient() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"root_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"resource_server_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -95,6 +99,27 @@ func dataSourceKeycloakOpenidClient() *schema.Resource {
 			"full_scope_allowed": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"consent_required": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"authentication_flow_binding_overrides": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"browser_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"direct_grant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}

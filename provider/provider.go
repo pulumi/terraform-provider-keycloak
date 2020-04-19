@@ -15,6 +15,7 @@ func KeycloakProvider() *schema.Provider {
 			"keycloak_realm":                              dataSourceKeycloakRealm(),
 			"keycloak_realm_keys":                         dataSourceKeycloakRealmKeys(),
 			"keycloak_role":                               dataSourceKeycloakRole(),
+			"keycloak_saml_client_installation_provider":  dataSourceKeycloakSamlClientInstallationProvider(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"keycloak_realm":                                           resourceKeycloakRealm(),
@@ -30,7 +31,9 @@ func KeycloakProvider() *schema.Provider {
 			"keycloak_ldap_user_federation":                            resourceKeycloakLdapUserFederation(),
 			"keycloak_ldap_user_attribute_mapper":                      resourceKeycloakLdapUserAttributeMapper(),
 			"keycloak_ldap_group_mapper":                               resourceKeycloakLdapGroupMapper(),
+			"keycloak_ldap_role_mapper":                                resourceKeycloakLdapRoleMapper(),
 			"keycloak_ldap_hardcoded_role_mapper":                      resourceKeycloakLdapHardcodedRoleMapper(),
+			"keycloak_ldap_hardcoded_group_mapper":                     resourceKeycloakLdapHardcodedGroupMapper(),
 			"keycloak_ldap_msad_user_account_control_mapper":           resourceKeycloakLdapMsadUserAccountControlMapper(),
 			"keycloak_ldap_msad_lds_user_account_control_mapper":       resourceKeycloakLdapMsadLdsUserAccountControlMapper(),
 			"keycloak_ldap_full_name_mapper":                           resourceKeycloakLdapFullNameMapper(),
@@ -126,6 +129,12 @@ func KeycloakProvider() *schema.Provider {
 				Description: "Allows x509 calls using an unknown CA certificate (for development purposes)",
 				Default:     "",
 			},
+			"tls_insecure_skip_verify": {
+				Optional:    true,
+				Type:        schema.TypeBool,
+				Description: "Allows ignoring insecure certificates when set to true. Defaults to false. Disabling security check is dangerous and should be avoided.",
+				Default:     false,
+			},
 		},
 		ConfigureFunc: configureKeycloakProvider,
 	}
@@ -140,7 +149,8 @@ func configureKeycloakProvider(data *schema.ResourceData) (interface{}, error) {
 	realm := data.Get("realm").(string)
 	initialLogin := data.Get("initial_login").(bool)
 	clientTimeout := data.Get("client_timeout").(int)
+	tlsInsecureSkipVerify := data.Get("tls_insecure_skip_verify").(bool)
 	rootCaCertificate := data.Get("root_ca_certificate").(string)
 
-	return keycloak.NewKeycloakClient(url, clientId, clientSecret, realm, username, password, initialLogin, clientTimeout, rootCaCertificate)
+	return keycloak.NewKeycloakClient(url, clientId, clientSecret, realm, username, password, initialLogin, clientTimeout, rootCaCertificate, tlsInsecureSkipVerify)
 }
