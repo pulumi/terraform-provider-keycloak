@@ -6,12 +6,12 @@ import (
 	"github.com/mrparkers/terraform-provider-keycloak/keycloak"
 )
 
-func resourceKeycloakOpenIdUserAttributeProtocolMapper() *schema.Resource {
+func resourceKeycloakOpenIdUserSessionNoteProtocolMapper() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceKeycloakOpenIdUserAttributeProtocolMapperCreate,
-		Read:   resourceKeycloakOpenIdUserAttributeProtocolMapperRead,
-		Update: resourceKeycloakOpenIdUserAttributeProtocolMapperUpdate,
-		Delete: resourceKeycloakOpenIdUserAttributeProtocolMapperDelete,
+		Create: resourceKeycloakOpenIdUserSessionNoteProtocolMapperCreate,
+		Read:   resourceKeycloakOpenIdUserSessionNoteProtocolMapperRead,
+		Update: resourceKeycloakOpenIdUserSessionNoteProtocolMapperUpdate,
+		Delete: resourceKeycloakOpenIdUserSessionNoteProtocolMapperDelete,
 		Importer: &schema.ResourceImporter{
 			// import a mapper tied to a client:
 			// {{realmId}}/client/{{clientId}}/{{protocolMapperId}}
@@ -57,22 +57,6 @@ func resourceKeycloakOpenIdUserAttributeProtocolMapper() *schema.Resource {
 				Default:     true,
 				Description: "Indicates if the attribute should be a claim in the access token.",
 			},
-			"add_to_userinfo": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Indicates if the attribute should appear in the userinfo response body.",
-			},
-			"multivalued": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Indicates whether this attribute is a single value or an array of values.",
-			},
-			"user_attribute": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"claim_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -84,18 +68,17 @@ func resourceKeycloakOpenIdUserAttributeProtocolMapper() *schema.Resource {
 				Default:      "String",
 				ValidateFunc: validation.StringInSlice([]string{"JSON", "String", "long", "int", "boolean"}, true),
 			},
-			"aggregate_attributes": {
-				Type:        schema.TypeBool,
+			"session_note_label": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     false,
-				Description: "Indicates if attribute values should be aggregated within the group attributes",
+				Description: "String value being the name of stored user session note within the UserSessionModel.note map.",
 			},
 		},
 	}
 }
 
-func mapFromDataToOpenIdUserAttributeProtocolMapper(data *schema.ResourceData) *keycloak.OpenIdUserAttributeProtocolMapper {
-	return &keycloak.OpenIdUserAttributeProtocolMapper{
+func mapFromDataToOpenIdUserSessionNoteProtocolMapper(data *schema.ResourceData) *keycloak.OpenIdUserSessionNoteProtocolMapper {
+	return &keycloak.OpenIdUserSessionNoteProtocolMapper{
 		Id:               data.Id(),
 		Name:             data.Get("name").(string),
 		RealmId:          data.Get("realm_id").(string),
@@ -103,17 +86,14 @@ func mapFromDataToOpenIdUserAttributeProtocolMapper(data *schema.ResourceData) *
 		ClientScopeId:    data.Get("client_scope_id").(string),
 		AddToIdToken:     data.Get("add_to_id_token").(bool),
 		AddToAccessToken: data.Get("add_to_access_token").(bool),
-		AddToUserInfo:    data.Get("add_to_userinfo").(bool),
 
-		UserAttribute:            data.Get("user_attribute").(string),
-		ClaimName:                data.Get("claim_name").(string),
-		ClaimValueType:           data.Get("claim_value_type").(string),
-		Multivalued:              data.Get("multivalued").(bool),
-		AggregateAttributeValues: data.Get("aggregate_attributes").(bool),
+		ClaimName:            data.Get("claim_name").(string),
+		ClaimValueType:       data.Get("claim_value_type").(string),
+		UserSessionNoteLabel: data.Get("session_note_label").(string),
 	}
 }
 
-func mapFromOpenIdUserAttributeMapperToData(mapper *keycloak.OpenIdUserAttributeProtocolMapper, data *schema.ResourceData) {
+func mapFromOpenIdUserSessionNoteMapperToData(mapper *keycloak.OpenIdUserSessionNoteProtocolMapper, data *schema.ResourceData) {
 	data.SetId(mapper.Id)
 	data.Set("name", mapper.Name)
 	data.Set("realm_id", mapper.RealmId)
@@ -126,75 +106,71 @@ func mapFromOpenIdUserAttributeMapperToData(mapper *keycloak.OpenIdUserAttribute
 
 	data.Set("add_to_id_token", mapper.AddToIdToken)
 	data.Set("add_to_access_token", mapper.AddToAccessToken)
-	data.Set("add_to_userinfo", mapper.AddToUserInfo)
-	data.Set("user_attribute", mapper.UserAttribute)
 	data.Set("claim_name", mapper.ClaimName)
 	data.Set("claim_value_type", mapper.ClaimValueType)
-	data.Set("multivalued", mapper.Multivalued)
-	data.Set("aggregate_attributes", mapper.AggregateAttributeValues)
+	data.Set("session_note_label", mapper.UserSessionNoteLabel)
 }
 
-func resourceKeycloakOpenIdUserAttributeProtocolMapperCreate(data *schema.ResourceData, meta interface{}) error {
+func resourceKeycloakOpenIdUserSessionNoteProtocolMapperCreate(data *schema.ResourceData, meta interface{}) error {
 	keycloakClient := meta.(*keycloak.KeycloakClient)
 
-	openIdUserAttributeMapper := mapFromDataToOpenIdUserAttributeProtocolMapper(data)
+	openIdUserSessionNoteMapper := mapFromDataToOpenIdUserSessionNoteProtocolMapper(data)
 
-	err := keycloakClient.ValidateOpenIdUserAttributeProtocolMapper(openIdUserAttributeMapper)
+	err := keycloakClient.ValidateOpenIdUserSessionNoteProtocolMapper(openIdUserSessionNoteMapper)
 	if err != nil {
 		return err
 	}
 
-	err = keycloakClient.NewOpenIdUserAttributeProtocolMapper(openIdUserAttributeMapper)
+	err = keycloakClient.NewOpenIdUserSessionNoteProtocolMapper(openIdUserSessionNoteMapper)
 	if err != nil {
 		return err
 	}
 
-	mapFromOpenIdUserAttributeMapperToData(openIdUserAttributeMapper, data)
+	mapFromOpenIdUserSessionNoteMapperToData(openIdUserSessionNoteMapper, data)
 
-	return resourceKeycloakOpenIdUserAttributeProtocolMapperRead(data, meta)
+	return resourceKeycloakOpenIdUserSessionNoteProtocolMapperRead(data, meta)
 }
 
-func resourceKeycloakOpenIdUserAttributeProtocolMapperRead(data *schema.ResourceData, meta interface{}) error {
+func resourceKeycloakOpenIdUserSessionNoteProtocolMapperRead(data *schema.ResourceData, meta interface{}) error {
 	keycloakClient := meta.(*keycloak.KeycloakClient)
-
 	realmId := data.Get("realm_id").(string)
 	clientId := data.Get("client_id").(string)
 	clientScopeId := data.Get("client_scope_id").(string)
 
-	openIdUserAttributeMapper, err := keycloakClient.GetOpenIdUserAttributeProtocolMapper(realmId, clientId, clientScopeId, data.Id())
+	openIdUserSessionNoteMapper, err := keycloakClient.GetOpenIdUserSessionNoteProtocolMapper(realmId, clientId, clientScopeId, data.Id())
 	if err != nil {
 		return handleNotFoundError(err, data)
 	}
 
-	mapFromOpenIdUserAttributeMapperToData(openIdUserAttributeMapper, data)
+	mapFromOpenIdUserSessionNoteMapperToData(openIdUserSessionNoteMapper, data)
 
 	return nil
 }
 
-func resourceKeycloakOpenIdUserAttributeProtocolMapperUpdate(data *schema.ResourceData, meta interface{}) error {
+func resourceKeycloakOpenIdUserSessionNoteProtocolMapperUpdate(data *schema.ResourceData, meta interface{}) error {
 	keycloakClient := meta.(*keycloak.KeycloakClient)
 
-	openIdUserAttributeMapper := mapFromDataToOpenIdUserAttributeProtocolMapper(data)
+	openIdUserSessionNoteMapper := mapFromDataToOpenIdUserSessionNoteProtocolMapper(data)
 
-	err := keycloakClient.ValidateOpenIdUserAttributeProtocolMapper(openIdUserAttributeMapper)
+	err := keycloakClient.ValidateOpenIdUserSessionNoteProtocolMapper(openIdUserSessionNoteMapper)
 	if err != nil {
 		return err
 	}
 
-	err = keycloakClient.UpdateOpenIdUserAttributeProtocolMapper(openIdUserAttributeMapper)
+	err = keycloakClient.UpdateOpenIdUserSessionNoteProtocolMapper(openIdUserSessionNoteMapper)
 	if err != nil {
 		return err
 	}
 
-	return resourceKeycloakOpenIdUserAttributeProtocolMapperRead(data, meta)
+	return resourceKeycloakOpenIdUserSessionNoteProtocolMapperRead(data, meta)
 }
 
-func resourceKeycloakOpenIdUserAttributeProtocolMapperDelete(data *schema.ResourceData, meta interface{}) error {
+func resourceKeycloakOpenIdUserSessionNoteProtocolMapperDelete(data *schema.ResourceData, meta interface{}) error {
 	keycloakClient := meta.(*keycloak.KeycloakClient)
 
 	realmId := data.Get("realm_id").(string)
 	clientId := data.Get("client_id").(string)
 	clientScopeId := data.Get("client_scope_id").(string)
 
-	return keycloakClient.DeleteOpenIdUserAttributeProtocolMapper(realmId, clientId, clientScopeId, data.Id())
+	return keycloakClient.DeleteOpenIdUserSessionNoteProtocolMapper(realmId, clientId, clientScopeId, data.Id())
 }

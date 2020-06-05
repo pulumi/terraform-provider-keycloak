@@ -1,3 +1,51 @@
+## 1.19.0 (June 5, 2020)
+
+FEATURES:
+
+- new resource: `keycloak_openid_user_client_role_protocol_mapper` ([#299](https://github.com/mrparkers/terraform-provider-keycloak/pull/299))
+- new resource: `keycloak_openid_user_session_note_protocol_mapper` ([#309](https://github.com/mrparkers/terraform-provider-keycloak/pull/309))
+
+IMPROVEMENTS:
+
+- add `login_theme` attribute to `keycloak_openid_client` resource ([#278](https://github.com/mrparkers/terraform-provider-keycloak/pull/278))
+- add `aggregate_attributes` attribute to `keycloak_openid_user_attribute_protocol_mapper` resource ([#272](https://github.com/mrparkers/terraform-provider-keycloak/pull/272))
+- add `user_managed_access` attribute to `keycloak_realm` resource ([#275](https://github.com/mrparkers/terraform-provider-keycloak/pull/275))
+- support deployed JavaScript policies for `keycloak_openid_client_js_policy` resource ([#275](https://github.com/mrparkers/terraform-provider-keycloak/pull/275))
+- add `internal_id` computed attribute to `keycloak_realm` resource and data source ([#270](https://github.com/mrparkers/terraform-provider-keycloak/pull/270))
+- surface Keycloak API errors to users during `terraform plan` and `terraform apply` ([#304](https://github.com/mrparkers/terraform-provider-keycloak/pull/304))
+- add `kerberos` configuration for `keycloak_ldap_user_federation` resource ([#290](https://github.com/mrparkers/terraform-provider-keycloak/pull/290))
+- test all major versions of Keycloak in CI ([#294](https://github.com/mrparkers/terraform-provider-keycloak/pull/294))
+- add import support for `keycloak_generic_client_role_mapper` resource ([#310](https://github.com/mrparkers/terraform-provider-keycloak/pull/310))
+- use terraform-plugin-sdk user agent string in http client ([#311](https://github.com/mrparkers/terraform-provider-keycloak/pull/311))
+
+BUG FIXES:
+
+- fix: mark `group_id` attribute as required for `keycloak_group_roles` resource ([#292](https://github.com/mrparkers/terraform-provider-keycloak/pull/292))
+
+## 1.18.0 (April 17, 2020)
+
+FEATURES:
+
+* new resource: `keycloak_ldap_hardcoded_group_mapper` ([#264](https://github.com/mrparkers/terraform-provider-keycloak/pull/264))
+* new data source: `keycloak_saml_client_installation_provider` ([#263](https://github.com/mrparkers/terraform-provider-keycloak/pull/263))
+* new resource: `keycloak_ldap_role_mapper` ([#265](https://github.com/mrparkers/terraform-provider-keycloak/pull/265))
+
+IMPROVEMENTS:
+
+* add `tls_insecure_skip_verify` provider attribute ([#237](https://github.com/mrparkers/terraform-provider-keycloak/pull/237))
+* add `client_scope_id` attribute to `keycloak_generic_client_role_mapper` resource ([#253](https://github.com/mrparkers/terraform-provider-keycloak/pull/253))
+* add `email_verified` attribute to `keycloak_user` resource ([#256](https://github.com/mrparkers/terraform-provider-keycloak/pull/256))
+* add `JSON` as a valid `claim_value_type` for openid protocol mapper resources ([#260](https://github.com/mrparkers/terraform-provider-keycloak/pull/260))
+* add `force_name_id_format` attribute to `keycloak_saml_client` resource ([#261](https://github.com/mrparkers/terraform-provider-keycloak/pull/261))
+* add `consent_required` and `authentication_flow_binding_overrides` attributes for `keycloak_openid_client` resource ([#262](https://github.com/mrparkers/terraform-provider-keycloak/pull/262))
+* add `root_url` attribute to `keycloak_openid_client` resource ([#248](https://github.com/mrparkers/terraform-provider-keycloak/pull/248))
+* add federated identity support for `keycloak_user` resource ([#274](https://github.com/mrparkers/terraform-provider-keycloak/pull/274))
+
+BUG FIXES:
+
+* correctly handle manually deleted clients when refreshing a `keycloak_openid_client_default_scopes` resource ([#252](https://github.com/mrparkers/terraform-provider-keycloak/pull/252))
+* correctly handle manually deleted clients when refreshing a `keycloak_openid_client_optional_scopes` resource
+
 ## 1.17.1 (March 12, 2020)
 
 BUG FIXES:
