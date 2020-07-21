@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	keycloakSamlClientNameIdFormats = []string{"username", "email", "transient", "persistent"}
+	keycloakSamlClientNameIdFormats       = []string{"username", "email", "transient", "persistent"}
+	keycloakSamlClientSignatureAlgorithms = []string{"RSA_SHA1", "RSA_SHA256", "RSA_SHA512", "DSA_SHA1"}
 )
 
 func resourceKeycloakSamlClient() *schema.Resource {
@@ -62,6 +63,11 @@ func resourceKeycloakSamlClient() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"encrypt_assertions": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"client_signature_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -81,6 +87,11 @@ func resourceKeycloakSamlClient() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+			},
+			"signature_algorithm": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(keycloakSamlClientSignatureAlgorithms, false),
 			},
 			"name_id_format": {
 				Type:         schema.TypeString,
@@ -106,11 +117,18 @@ func resourceKeycloakSamlClient() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_certificate": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return old == formatCertificate(new)
+				},
+			},
 			"signing_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return old == formatSigningCertificate(new)
+					return old == formatCertificate(new)
 				},
 			},
 			"signing_private_key": {
@@ -153,7 +171,7 @@ func resourceKeycloakSamlClient() *schema.Resource {
 	}
 }
 
-func formatSigningCertificate(signingCertificate string) string {
+func formatCertificate(signingCertificate string) string {
 	r := strings.NewReplacer(
 		"-----BEGIN CERTIFICATE-----", "",
 		"-----END CERTIFICATE-----", "",
@@ -183,6 +201,7 @@ func mapToSamlClientFromData(data *schema.ResourceData) *keycloak.SamlClient {
 	}
 
 	samlAttributes := &keycloak.SamlClientAttributes{
+		SignatureAlgorithm:              data.Get("signature_algorithm").(string),
 		NameIdFormat:                    data.Get("name_id_format").(string),
 		IDPInitiatedSSOURLName:          data.Get("idp_initiated_sso_url_name").(string),
 		IDPInitiatedSSORelayState:       data.Get("idp_initiated_sso_relay_state").(string),
@@ -192,8 +211,13 @@ func mapToSamlClientFromData(data *schema.ResourceData) *keycloak.SamlClient {
 		LogoutServiceRedirectBindingURL: data.Get("logout_service_redirect_binding_url").(string),
 	}
 
+	if encryptionCertificate, ok := data.GetOkExists("encryption_certificate"); ok {
+		encryptionCertificateString := formatCertificate(encryptionCertificate.(string))
+		samlAttributes.EncryptionCertificate = &encryptionCertificateString
+	}
+
 	if signingCertificate, ok := data.GetOkExists("signing_certificate"); ok {
-		signingCertificateString := formatSigningCertificate(signingCertificate.(string))
+		signingCertificateString := formatCertificate(signingCertificate.(string))
 		samlAttributes.SigningCertificate = &signingCertificateString
 	}
 
@@ -220,6 +244,11 @@ func mapToSamlClientFromData(data *schema.ResourceData) *keycloak.SamlClient {
 	if signAssertions, ok := data.GetOkExists("sign_assertions"); ok {
 		signAssertionsString := strconv.FormatBool(signAssertions.(bool))
 		samlAttributes.SignAssertions = &signAssertionsString
+	}
+
+	if encryptAssertions, ok := data.GetOkExists("encrypt_assertions"); ok {
+		encryptAssertionsString := strconv.FormatBool(encryptAssertions.(bool))
+		samlAttributes.EncryptAssertions = &encryptAssertionsString
 	}
 
 	if clientSignatureRequired, ok := data.GetOkExists("client_signature_required"); ok {
@@ -289,6 +318,15 @@ func mapToDataFromSamlClient(data *schema.ResourceData, client *keycloak.SamlCli
 		data.Set("sign_assertions", signAssertions)
 	}
 
+	if client.Attributes.EncryptAssertions != nil {
+		encryptAssertions, err := strconv.ParseBool(*client.Attributes.EncryptAssertions)
+		if err != nil {
+			return err
+		}
+
+		data.Set("encrypt_assertions", encryptAssertions)
+	}
+
 	if client.Attributes.ClientSignatureRequired != nil {
 		clientSignatureRequired, err := strconv.ParseBool(*client.Attributes.ClientSignatureRequired)
 		if err != nil {
@@ -305,6 +343,10 @@ func mapToDataFromSamlClient(data *schema.ResourceData, client *keycloak.SamlCli
 		}
 
 		data.Set("force_post_binding", forcePostBinding)
+	}
+
+	if _, exists := data.GetOkExists("encryption_certificate"); client.Attributes.EncryptionCertificate != nil && exists {
+		data.Set("encryption_certificate", client.Attributes.EncryptionCertificate)
 	}
 
 	if _, exists := data.GetOkExists("signing_certificate"); client.Attributes.SigningCertificate != nil && exists {
@@ -325,6 +367,7 @@ func mapToDataFromSamlClient(data *schema.ResourceData, client *keycloak.SamlCli
 	data.Set("valid_redirect_uris", client.ValidRedirectUris)
 	data.Set("base_url", client.BaseUrl)
 	data.Set("master_saml_processing_url", client.MasterSamlProcessingUrl)
+	data.Set("signature_algorithm", client.Attributes.SignatureAlgorithm)
 	data.Set("name_id_format", client.Attributes.NameIdFormat)
 	data.Set("idp_initiated_sso_url_name", client.Attributes.IDPInitiatedSSOURLName)
 	data.Set("idp_initiated_sso_relay_state", client.Attributes.IDPInitiatedSSORelayState)

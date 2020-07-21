@@ -160,6 +160,44 @@ resource "keycloak_generic_client_role_mapper" "pet_app_pet_api_admin_role_mappi
   role_id   = keycloak_role.pet_api_admin.id
 }
 
+// Realm roles
+
+resource "keycloak_role" "realm_reader" {  
+  realm_id  = keycloak_realm.roles_example.id
+  name        = "realm_reader"
+  description = "Reader realm role"
+}
+
+resource "keycloak_role" "realm_writer" {
+  realm_id  = keycloak_realm.roles_example.id
+  name        = "realm_writer"
+  description = "Writer realm role"
+}
+
+resource "keycloak_role" "realm_admin" {
+  realm_id  = keycloak_realm.roles_example.id
+  name        = "realm_admin"
+  description = "Admin realm composite role"
+  composite_roles = [
+    keycloak_role.realm_reader.id,
+    keycloak_role.realm_writer.id
+  ]
+}
+
+// Client scope for realm roles mapping 
+
+resource "keycloak_openid_client_scope" "petstore_api_access_scope" {
+  realm_id  = keycloak_realm.roles_example.id
+  name        = "petstore-api-access"
+  description = "Optional scope offering additional information for petstore api access"
+}
+
+resource "keycloak_generic_client_role_mapper" "petstore_api_access_scope_admin" {
+    realm_id  = keycloak_realm.roles_example.id
+    client_scope_id =  keycloak_openid_client_scope.petstore_api_access_scope.id
+    role_id         = keycloak_role.realm_admin.id
+}
+
 // Users and groups
 
 resource "keycloak_group" "pet_api_base" {
@@ -184,7 +222,7 @@ data "keycloak_role" "realm_offline_access" {
   name     = "offline_access"
 }
 
-resource "keycloak_group_roles" "admin_roles" {
+resource "keycloak_group_roles" "admin_group_roles" {
   realm_id = keycloak_realm.roles_example.id
   group_id = keycloak_group.pet_api_admins.id
 
@@ -204,6 +242,28 @@ resource "keycloak_group_roles" "front_desk_roles" {
   role_ids = [
     keycloak_role.pet_api_read_pet.id,
     keycloak_role.pet_api_read_pet_details.id,
+    keycloak_role.pet_api_create_pet.id,
+    data.keycloak_role.realm_offline_access.id,
+  ]
+}
+
+resource "keycloak_user" "admin_user" {
+  realm_id = keycloak_realm.roles_example.id
+  username = "admin-user"
+
+  email      = "admin-user@fakedomain.com"
+  first_name = "Admin"
+  last_name  = "Istrator"
+}
+
+resource "keycloak_user_roles" "admin_user_roles" {
+  realm_id = keycloak_realm.roles_example.id
+  user_id  = keycloak_user.admin_user.id
+
+  role_ids = [
+    keycloak_role.pet_api_read_pet.id,
+    keycloak_role.pet_api_read_pet_details.id,
+    keycloak_role.pet_api_delete_pet.id,
     keycloak_role.pet_api_create_pet.id,
     data.keycloak_role.realm_offline_access.id,
   ]
