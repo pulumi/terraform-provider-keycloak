@@ -62,6 +62,10 @@ is set to `true`.
 - `pkce_code_challenge_method` - (Optional) The challenge method to use for Proof Key for Code Exchange. Can be either `plain` or `S256` or set to empty value ``.
 - `full_scope_allowed` - (Optional) Allow to include all roles mappings in the access token.
 - `access_token_lifespan` - (Optional) The amount of time in seconds before an access token expires. This will override the default for the realm.
+- `client_offline_session_idle_timeout` - (Optional) Time a client session is allowed to be idle before it expires. Tokens are invalidated when a client session is expired. If not set it uses the standard SSO Session Idle value.
+- `client_offline_session_max_lifespan` - (Optional) Max time before a client session is expired. Tokens are invalidated when a client session is expired. If not set, it uses the standard SSO Session Max value.
+- `client_session_idle_timeout` - (Optional) Time a client offline session is allowed to be idle before it expires. Offline tokens are invalidated when a client offline session is expired. If not set it uses the Offline Session Idle value.
+- `client_session_max_lifespan` - (Optional) Max time before a client offline session is expired. Offline tokens are invalidated when a client offline session is expired. If not set, it uses the Offline Session Max value.
 - `consent_required` - (Optional) When `true`, users have to consent to client access.
 - `authentication_flow_binding_overrides` - (Optional) Override realm authentication flow bindings
     - `browser_id` - (Optional) Browser flow id, (flow needs to exist)
@@ -70,6 +74,7 @@ is set to `true`.
 - `exclude_session_state_from_auth_response` - (Optional) When `true`, the parameter `session_state` will not be included in OpenID Connect Authentication Response.
 - `authorization` - (Optional) When this block is present, fine-grained authorization will be enabled for this client. The client's `access_type` must be `CONFIDENTIAL`, and `service_accounts_enabled` must be `true`. This block has the following arguments:
     - `policy_enforcement_mode` - (Required) Dictates how policies are enforced when evaluating authorization requests. Can be one of `ENFORCING`, `PERMISSIVE`, or `DISABLED`.
+    - `decision_strategy` - (Optional) Dictates how the policies associated with a given permission are evaluated and how a final decision is obtained. Could be one of `AFFIRMATIVE`, `CONSENSUS`, or `UNANIMOUS`. Applies to permissions.
     - `allow_remote_resource_management` - (Optional) When `true`, resources can be managed remotely by the resource server. Defaults to `false`.
     - `keep_defaults` - (Optional) When `true`, defaults set by Keycloak will be respected. Defaults to `false`.
 

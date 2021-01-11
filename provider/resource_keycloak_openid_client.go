@@ -1,18 +1,22 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mrparkers/terraform-provider-keycloak/keycloak"
-	"strings"
 )
 
 var (
-	keycloakOpenidClientAccessTypes                        = []string{"CONFIDENTIAL", "PUBLIC", "BEARER-ONLY"}
-	keycloakOpenidClientAuthorizationPolicyEnforcementMode = []string{"ENFORCING", "PERMISSIVE", "DISABLED"}
-	keycloakOpenidClientPkceCodeChallengeMethod            = []string{"", "plain", "S256"}
+	keycloakOpenidClientAccessTypes                          = []string{"CONFIDENTIAL", "PUBLIC", "BEARER-ONLY"}
+	keycloakOpenidClientAuthorizationPolicyEnforcementMode   = []string{"ENFORCING", "PERMISSIVE", "DISABLED"}
+	keycloakOpenidClientResourcePermissionDecisionStrategies = []string{"UNANIMOUS", "AFFIRMATIVE", "CONSENSUS"}
+	keycloakOpenidClientPkceCodeChallengeMethod              = []string{"", "plain", "S256"}
 )
 
 func resourceKeycloakOpenidClient() *schema.Resource {
@@ -116,6 +120,22 @@ func resourceKeycloakOpenidClient() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"client_offline_session_idle_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"client_offline_session_max_lifespan": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"client_session_idle_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"client_session_max_lifespan": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"exclude_session_state_from_auth_response": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -135,6 +155,12 @@ func resourceKeycloakOpenidClient() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(keycloakOpenidClientAuthorizationPolicyEnforcementMode, false),
+						},
+						"decision_strategy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(keycloakOpenidClientResourcePermissionDecisionStrategies, false),
+							Default:      "UNANIMOUS",
 						},
 						"allow_remote_resource_management": {
 							Type:     schema.TypeBool,
@@ -181,6 +207,9 @@ func resourceKeycloakOpenidClient() *schema.Resource {
 				Optional: true,
 			},
 		},
+		CustomizeDiff: customdiff.ComputedIf("service_account_user_id", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			return d.HasChange("service_accounts_enabled")
+		}),
 	}
 }
 
@@ -237,6 +266,10 @@ func getOpenidClientFromData(data *schema.ResourceData) (*keycloak.OpenidClient,
 			ExcludeSessionStateFromAuthResponse: keycloak.KeycloakBoolQuoted(data.Get("exclude_session_state_from_auth_response").(bool)),
 			AccessTokenLifespan:                 data.Get("access_token_lifespan").(string),
 			LoginTheme:                          data.Get("login_theme").(string),
+			ClientOfflineSessionIdleTimeout:     data.Get("client_offline_session_idle_timeout").(string),
+			ClientOfflineSessionMaxLifespan:     data.Get("client_offline_session_max_lifespan").(string),
+			ClientSessionIdleTimeout:            data.Get("client_session_idle_timeout").(string),
+			ClientSessionMaxLifespan:            data.Get("client_session_max_lifespan").(string),
 		},
 		ValidRedirectUris: validRedirectUris,
 		WebOrigins:        webOrigins,
@@ -274,6 +307,7 @@ func getOpenidClientFromData(data *schema.ResourceData) (*keycloak.OpenidClient,
 		authorizationSettings := authorizationSettingsData.(map[string]interface{})
 		openidClient.AuthorizationSettings = &keycloak.OpenidClientAuthorizationSettings{
 			PolicyEnforcementMode:         authorizationSettings["policy_enforcement_mode"].(string),
+			DecisionStrategy:              authorizationSettings["decision_strategy"].(string),
 			AllowRemoteResourceManagement: authorizationSettings["allow_remote_resource_management"].(bool),
 			KeepDefaults:                  authorizationSettings["keep_defaults"].(bool),
 		}
