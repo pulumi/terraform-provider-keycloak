@@ -22,6 +22,7 @@ func KeycloakProvider(client *keycloak.KeycloakClient) *schema.Provider {
 			"keycloak_role":                               dataSourceKeycloakRole(),
 			"keycloak_user":                               dataSourceKeycloakUser(),
 			"keycloak_saml_client_installation_provider":  dataSourceKeycloakSamlClientInstallationProvider(),
+			"keycloak_saml_client":                        dataSourceKeycloakSamlClient(),
 			"keycloak_authentication_execution":           dataSourceKeycloakAuthenticationExecution(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -137,7 +138,7 @@ func KeycloakProvider(client *keycloak.KeycloakClient) *schema.Provider {
 				Optional:    true,
 				Type:        schema.TypeInt,
 				Description: "Timeout (in seconds) of the Keycloak client",
-				DefaultFunc: schema.EnvDefaultFunc("KEYCLOAK_CLIENT_TIMEOUT", 5),
+				DefaultFunc: schema.EnvDefaultFunc("KEYCLOAK_CLIENT_TIMEOUT", 15),
 			},
 			"root_ca_certificate": {
 				Optional:    true,
