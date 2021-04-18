@@ -28,6 +28,18 @@ var keyNameTransformers = []string{
 	"CERT_SUBJECT",
 }
 
+var principalTypes = []string{
+	"SUBJECT",
+	"ATTRIBUTE",
+	"FRIENDLY_ATTRIBUTE",
+}
+
+var syncModes = []string{
+	"IMPORT",
+	"FORCE",
+	"LEGACY",
+}
+
 func resourceKeycloakSamlIdentityProvider() *schema.Resource {
 	samlSchema := map[string]*schema.Schema{
 		"backchannel_supported": {
@@ -59,6 +71,11 @@ func resourceKeycloakSamlIdentityProvider() *schema.Resource {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Logout URL.",
+		},
+		"entity_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Entity ID that will be used to uniquely identify this SAML Service Provider.",
 		},
 		"single_sign_on_service_url": {
 			Type:        schema.TypeString,
@@ -114,6 +131,32 @@ func resourceKeycloakSamlIdentityProvider() *schema.Resource {
 			Optional:    true,
 			Description: "Want Assertions Encrypted.",
 		},
+		"principal_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "",
+			ValidateFunc: validation.StringInSlice(principalTypes, false),
+			Description:  "Principal Type",
+		},
+		"principal_attribute": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Principal Attribute",
+		},
+		"gui_order": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "GUI Order",
+		},
+		"sync_mode": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "",
+			ValidateFunc: validation.StringInSlice(syncModes, false),
+			Description:  "Sync Mode",
+		},
 	}
 	samlResource := resourceKeycloakIdentityProvider()
 	samlResource.Schema = mergeSchemas(samlResource.Schema, samlSchema)
@@ -131,6 +174,7 @@ func getSamlIdentityProviderFromData(data *schema.ResourceData) (*keycloak.Ident
 		HideOnLoginPage:                  keycloak.KeycloakBoolQuoted(data.Get("hide_on_login_page").(bool)),
 		BackchannelSupported:             keycloak.KeycloakBoolQuoted(data.Get("backchannel_supported").(bool)),
 		NameIDPolicyFormat:               nameIdPolicyFormats[data.Get("name_id_policy_format").(string)],
+		EntityId:                         data.Get("entity_id").(string),
 		SingleLogoutServiceUrl:           data.Get("single_logout_service_url").(string),
 		SingleSignOnServiceUrl:           data.Get("single_sign_on_service_url").(string),
 		SigningCertificate:               data.Get("signing_certificate").(string),
@@ -142,6 +186,10 @@ func getSamlIdentityProviderFromData(data *schema.ResourceData) (*keycloak.Ident
 		ForceAuthn:                       keycloak.KeycloakBoolQuoted(data.Get("force_authn").(bool)),
 		WantAssertionsSigned:             keycloak.KeycloakBoolQuoted(data.Get("want_assertions_signed").(bool)),
 		WantAssertionsEncrypted:          keycloak.KeycloakBoolQuoted(data.Get("want_assertions_encrypted").(bool)),
+		PrincipalType:                    data.Get("principal_type").(string),
+		PrincipalAttribute:               data.Get("principal_attribute").(string),
+		GuiOrder:                         data.Get("gui_order").(string),
+		SyncMode:                         data.Get("sync_mode").(string),
 	}
 	if _, ok := data.GetOk("signature_algorithm"); ok {
 		rec.Config.WantAuthnRequestsSigned = true
@@ -155,6 +203,7 @@ func setSamlIdentityProviderData(data *schema.ResourceData, identityProvider *ke
 	data.Set("validate_signature", identityProvider.Config.ValidateSignature)
 	data.Set("hide_on_login_page", identityProvider.Config.HideOnLoginPage)
 	data.Set("name_id_policy_format", identityProvider.Config.NameIDPolicyFormat)
+	data.Set("entity_id", identityProvider.Config.EntityId)
 	data.Set("single_logout_service_url", identityProvider.Config.SingleLogoutServiceUrl)
 	data.Set("single_sign_on_service_url", identityProvider.Config.SingleSignOnServiceUrl)
 	data.Set("signing_certificate", identityProvider.Config.SigningCertificate)
@@ -166,5 +215,9 @@ func setSamlIdentityProviderData(data *schema.ResourceData, identityProvider *ke
 	data.Set("force_authn", identityProvider.Config.ForceAuthn)
 	data.Set("want_assertions_signed", identityProvider.Config.WantAssertionsSigned)
 	data.Set("want_assertions_encrypted", identityProvider.Config.WantAssertionsEncrypted)
+	data.Set("principal_type", identityProvider.Config.PrincipalType)
+	data.Set("principal_attribute", identityProvider.Config.PrincipalAttribute)
+	data.Set("gui_order", identityProvider.Config.GuiOrder)
+	data.Set("sync_mode", identityProvider.Config.SyncMode)
 	return nil
 }

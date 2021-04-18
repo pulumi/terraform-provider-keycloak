@@ -2,7 +2,7 @@ terraform {
   required_providers {
     keycloak = {
       source  = "terraform.local/mrparkers/keycloak"
-      version = ">= 2.0"
+      version = ">= 3.0"
     }
   }
 }
@@ -11,6 +11,9 @@ provider "keycloak" {
   client_id     = "terraform"
   client_secret = "884e0f95-0f42-4a63-9b1f-94274655669e"
   url           = "http://localhost:8080"
+  additional_headers = {
+    foo = "bar"
+  }
 }
 
 resource "keycloak_realm" "test" {
@@ -277,7 +280,9 @@ resource "keycloak_ldap_user_federation" "openldap" {
     kerberos_realm = "FOO.LOCAL"
   }
 
-  cache_policy = "NO_CACHE"
+  cache {
+    policy = "NO_CACHE"
+  }
 }
 
 resource "keycloak_ldap_user_attribute_mapper" "description_attr_mapper" {
@@ -345,6 +350,16 @@ resource "keycloak_openid_user_attribute_protocol_mapper" "map_user_attributes_c
   user_attribute = "description"
   claim_name     = "description"
 }
+
+resource "keycloak_openid_user_attribute_protocol_mapper" "map_user_permissions_attributes_client" {
+  name           = "tf-test-open-id-user-multivalue-attribute-protocol-mapper-client"
+  realm_id       = keycloak_realm.test.id
+  client_id      = keycloak_openid_client.test_client.id
+  user_attribute = "permissions"
+  claim_name     = "permissions"
+  multivalued    = true
+}
+
 
 resource "keycloak_openid_user_attribute_protocol_mapper" "map_user_attributes_client_scope" {
   name            = "tf-test-open-id-user-attribute-protocol-mapper-client-scope"
@@ -667,6 +682,7 @@ resource keycloak_hardcoded_attribute_identity_provider_mapper oidc {
 resource keycloak_saml_identity_provider saml {
   realm                      = keycloak_realm.test.id
   alias                      = "saml"
+  entity_id                  = "https://example.com/entity_id"
   single_sign_on_service_url = "https://example.com/auth"
 }
 
@@ -804,6 +820,19 @@ resource "keycloak_openid_client_authorization_scope" "resource" {
   resource_server_id = keycloak_openid_client.test_client_auth.resource_server_id
   name               = "test-openid-client1"
   realm_id           = keycloak_realm.test.id
+}
+
+resource "keycloak_user" "user_with_multivalueattributes" {
+  realm_id = keycloak_realm.test.id
+  username = "user-with-mutivalueattributes"
+
+  attributes = {
+    "permissions" = "permission1##permission2"
+  }
+  initial_password {
+    value     = "My password"
+    temporary = false
+  }
 }
 
 resource "keycloak_user" "resource" {
