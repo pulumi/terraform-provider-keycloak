@@ -1,3 +1,26 @@
+## v3.1.1 (June 8, 2021)
+
+There was an internal problem with the v3.1.0 release, causing a checksum error when running `terraform init`.  Please use
+this release instead.
+
+## v3.1.0 (June 8, 2021)
+
+An internal error during the release process caused this release to fail when running `terraform init`.  Please use v3.1.1
+instead.
+
+FEATURES:
+
+- new resource: `keycloak_custom_identity_provider_mapper` ([#515](https://github.com/mrparkers/terraform-provider-keycloak/pull/515))
+- new data source: `keycloak_client_description_converter` ([#518](https://github.com/mrparkers/terraform-provider-keycloak/pull/518))
+
+IMPROVEMENTS:
+
+- use pagination for `keycloak_group_memberships` resource ([#527](https://github.com/mrparkers/terraform-provider-keycloak/pull/527))
+
+BUG FIXES:
+
+- handle deleted role when removing role assignment from `keycloak_group_roles` resource ([#538](https://github.com/mrparkers/terraform-provider-keycloak/pull/538))
+
 ## v3.0.1 (May 5, 2021)
 
 BUG FIXES:
